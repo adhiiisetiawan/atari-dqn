@@ -108,3 +108,90 @@ def make_env(env_id, seed, idx, capture_video, run_name):
         return env
     
     return thunk
+
+
+class QNetwork(nn.Module):
+    def __init__(self, env):
+        super().__init__()
+        self.network = nn.Sequential(
+            nn.Conv2d(4, 32, 8, stride=4),
+            nn.ReLU(),
+            nn.Conv2d(32, 64, 4, stride=2),
+            nn.ReLU(),
+            nn.Conv2d(64, 64, 3, stride=1),
+            nn.ReLU(),
+            nn.Flatten(),
+            nn.Linear(3136, 512),
+            nn.ReLU(),
+            nn.Linear(512, env.single_action_space.n),
+        )
+
+    def forward(self, x):
+        return self.network(x / 255.0)
+    
+
+def linear_schedule(start_e: float, end_e: float, duration: int, t: int):
+    slope = (end_e - start_e) / duration
+    return max(slope * t + start_e, end_e)
+
+if __name__ == "__main__":
+    import stable_baselines3 as sb3
+
+    if sb3.__version__ < "2.0":
+        raise ValueError(
+            """On going migration: run the following command to install new dependencies
+        pip install "stable_baselines3==2.0.0a1" "gymnasium[atari,accept-rom-license]==0.28.1"  "ale-py==0.8.1"
+        """
+        )
+    
+    args = parse_args()
+    run_name = f"{args.env_id}__{args.exp_name}__{args.seed}__{int(time.time())}"
+    if args.track:
+        import wandb
+
+        wandb.init(
+            project=args.wandb_project_name,
+            entity=args.wandb_entity,
+            sync_tensorboard=True,
+            config=vars(args),
+            name=run_name,
+            monitor_gym=True,
+            save_code=True
+        )
+
+    writer = SummaryWriter(f"runs/{run_name}")
+    writer.add_text(
+        "hyperparameters",
+        "|param|value|\n|-|-|\n%s" % ("\n".join([f"|{key}|{value}|" for key, value in vars(args).items()])),
+    )
+
+    random.seed(args.seed)
+    np.random.seed(args.seed)
+    torch.manual_seed(args.seed)
+    torch.backends.cudnn.deterministic = args.torch_deterministic
+
+    device = torch.device("cuda" if torch.cuda.is_available() and args.cuda else "cpu")
+
+    envs = gym.vector.SyncVectorEnv(
+        [make_env(args.env_id, args.seed + i, i, args.capture_video, run_name) for i in range(args.num_envs)]
+    )
+    assert isinstance(envs.single_action_space, gym.spaces.Discrete), "only discrete action space is supported"
+
+    q_network = QNetwork(envs).to(device)
+    optimizer = optim.Adam(q_network.parameters(), lr=args.learning_rate)
+    target_network = QNetwork(envs).to(device)
+    target_network.load_state_dict(q_network.state_dict())
+
+    rb = ReplayBuffer(
+        args.buffer_size,
+        envs.single_observation_space,
+        envs.single_action_space,
+        device,
+        optimize_memory_usage=True,
+        handle_timeout_termination=False
+    )
+    start_time = time.time()
+
+    obs, _ = envs.reset(seed=args.seed)
+    for global_step in range(args.total_timesteps):
+        epsilon
