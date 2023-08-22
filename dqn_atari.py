@@ -194,4 +194,84 @@ if __name__ == "__main__":
 
     obs, _ = envs.reset(seed=args.seed)
     for global_step in range(args.total_timesteps):
-        epsilon
+        epsilon = linear_schedule(args.start_e, args.end_e, args.exploration_fraction * args.total_timesteps, global_step)
+        if random.random() < epsilon:
+            actions = np.array([envs.single_action_space.sample() for _ in range(envs.num_envs)])
+        else:
+            q_values = q_network(torch.Tensor(obs).to(device))
+            actions = torch.argmax(q_values, dim=1).cpu().numpy()
+
+        next_obs, rewards, terminated, truncated, infos = envs.step(actions)
+
+        if "final_info" in infos:
+            for info in infos["final_info"]:
+                if "episode" not in info:
+                    continue
+                print(f"global_step={global_step}, episodic_return={info['episode']['r']}")
+                writer.add_scalar("charts/episodic_return", info["episode"]["r"], global_step)
+                writer.add_scalar("charts/episode_length", info["episode"]["l"], global_step)
+                writer.add_scalar("charts/epsilon", epsilon, global_step)
+
+        real_next_obs = next_obs.copy()
+        for idx, d in enumerate(truncated):
+            if d:
+                real_next_obs[idx] = infos["final_observation"][idx]
+        rb.add(obs, real_next_obs, actions, rewards, terminated, infos)
+
+        obs = next_obs
+
+        if global_step > args.learning_starts:
+            if global_step % args.train_frequency == 0:
+                data = rb.sample(args.batch_size)
+                with torch.no_grad():
+                    target_max, _ = target_network(data.next_observations).max(dim=1)
+                    td_target = data.rewards.flatten() + args.gamma * target_max * (1 - data.dones.flatten())
+                old_val = q_network(data.observations).gather(1, data.actions).squeeze()
+                loss = F.mse_loss(td_target, old_val)
+
+                if global_step % 100 == 0:
+                    writer.add_scalar("losses/td_loss", loss, global_step)
+                    writer.add_scalar("losses/q_values", old_val.mean().item(), global_step)
+                    print("SPS:", int(global_step / (time.time() - start_time)))
+                    writer.add_scalar("charts/SPS", int(global_step / (time.time() - start_time)), global_step)
+
+                optimizer.zero_grad()
+                loss.backward()
+                optimizer.step()
+
+            if global_step % args.target_network_frequency == 0:
+                for target_network_param, q_network_param in zip(target_network.parameters(), q_network.parameters()):
+                    target_network_param.data.copy_(
+                        args.tau * q_network_param.data + (1.0 - args.tau) * target_network_param.data
+                    )
+
+    if args.save_model:
+        model_path = f"runs/{run_name}/{args.exp_name}.cleanrl_model"
+        torch.save(q_network.state_dict(), model_path)
+        print(f"model saved to {model_path}")
+
+        from cleanrl_utils.evals.dqn_eval import evaluate
+
+        episodic_returns = evaluate(
+            model_path,
+            make_env,
+            args.env_id,
+            eval_episode=10,
+            run_name=f"{run_name}-eval",
+            Model=QNetwork,
+            device=device,
+            epsilon=0.05,
+        )
+
+        for idx, episodic_return in enumerate(episodic_returns):
+            writer.add_scalar("eval/episodic_return", episodic_return, idx)
+
+        if args.upload_model:
+            from cleanrl_utils.huggingface import push_to_hub
+
+            repo_name = f"{args.env_id}-{args.exp_name}-seed{args.seed}"
+            repo_id = f"{args.hf_entity}/{repo_name}" if args.hf_entity else repo_name
+            push_to_hub(args, episodic_returns, repo_id, "DQN", f"runs/{run_name}", f"videos/{run_name}-eval")
+
+    envs.close()
+    writer.close()
