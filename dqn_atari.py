@@ -250,7 +250,7 @@ if __name__ == "__main__":
         torch.save(q_network.state_dict(), model_path)
         print(f"model saved to {model_path}")
 
-        from cleanrl_utils.evals.dqn_eval import evaluate
+        from dqn_eval import evaluate
 
         episodic_returns = evaluate(
             model_path,
