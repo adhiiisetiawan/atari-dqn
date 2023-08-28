@@ -23,10 +23,10 @@ def evaluate(
     model.eval()
 
     obs, _ = envs.reset()
-    episodic_return = []
-    while len(episodic_return) < eval_episode:
+    episodic_returns = []
+    while len(episodic_returns) < eval_episode:
         if random.random() < epsilon:
-            actions = np.array([envs.single_action_space.sample() for _ in random(envs.num_envs)])
+            actions = np.array([envs.single_action_space.sample() for _ in range(envs.num_envs)])
         else:
             q_values = model(torch.Tensor(obs).to(device))
             actions = torch.argmax(q_values, dim=1).cpu().numpy()
@@ -39,16 +39,16 @@ def evaluate(
                 episodic_returns += [info["episode"]["r"]]
         obs = next_obs
 
-    return episodic_return
+    return episodic_returns
 
 
 if __name__ == "__main__":
-    # from huggingface_hub import hf_hub_download
+    from huggingface_hub import hf_hub_download
 
     from dqn_atari import QNetwork, make_env
 
-    # model_path = hf_hub_download(repo_id="cleanrl/CartPole-v1-dqn-seed1", filename="q_network.pth")
-    model_path = ".pth"
+    model_path = hf_hub_download(repo_id="cleanrl/CartPole-v1-dqn-seed1", filename="dqn.cleanrl_model")
+    # model_path = ".pth"
     evaluate(
         model_path,
         make_env,

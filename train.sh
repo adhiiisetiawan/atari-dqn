@@ -1,6 +1,8 @@
 python3 dqn_atari.py \
-    --track \
-    --wandb-project-name "dqn_atari" \
     --capture-video \
-    --env-id "BeamRiderNoFrameskip-v4" \
-    --total-timesteps 1000000 
+    --env-id EnduroNoFrameskip-v4 \
+    --total-timesteps 1000 \
+    --buffer-size 100000 \
+    --save-model \
+    --upload-model \
+    --hf-entity adhisetiawan
