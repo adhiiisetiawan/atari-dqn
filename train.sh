@@ -1,8 +1,11 @@
 python3 dqn_atari.py \
+    --exp-name Qbert \
+    --track \
+    --wandb-project-name ALE \
     --capture-video \
-    --env-id EnduroNoFrameskip-v4 \
-    --total-timesteps 1000 \
-    --buffer-size 100000 \
+    --env-id ALE/Qbert-v5 \
+    --total-timesteps 5000000 \
+    --buffer-size 400000 \
     --save-model \
     --upload-model \
     --hf-entity adhisetiawan
