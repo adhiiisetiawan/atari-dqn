@@ -92,9 +92,18 @@ The evaluation process involves testing the trained DQN agent on a specific game
 
 ## Results
 
-### Game: `<game_name>`
+### Game: `Q-Bert`
 
-Insert qualitative and/or quantitative results, such as graphs showing learning curves, final scores achieved, etc.
+Here's a GIF of the agent playing `Q-Bert`:
+
+![Agent Playing](assets/q_bert.gif)
+
+### Game: `MS PacMan`
+
+Here's a GIF of the agent playing `MS PacMan`:
+
+![Agent Playing](assets/pacman.gif)
+
 
 ## Contributing
 
