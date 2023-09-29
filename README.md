@@ -35,8 +35,6 @@ To run this project, you will need the following:
 - Python 3.x
 - PyTorch
 - Gym (OpenAI)
-- NumPy
-- Matplotlib (for visualization)
 
 ### Installation
 
