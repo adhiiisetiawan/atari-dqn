@@ -41,7 +41,7 @@ To run this project, you will need the following:
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/yourusername/deep-q-network-atari.git
+git clone https://github.com/adhiiisetiawan/atari-dqn.git
 ```
 
 2. Install the required dependencies:
