@@ -104,3 +104,18 @@ Here's a GIF of the agent playing `MS PacMan`:
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgment
+This repository inspired by CleanRL by Costa Huang
+```
+@article{huang2022cleanrl,
+  author  = {Shengyi Huang and Rousslan Fernand Julien Dossa and Chang Ye and Jeff Braga and Dipam Chakraborty and Kinal Mehta and João G.M. Araújo},
+  title   = {CleanRL: High-quality Single-file Implementations of Deep Reinforcement Learning Algorithms},
+  journal = {Journal of Machine Learning Research},
+  year    = {2022},
+  volume  = {23},
+  number  = {274},
+  pages   = {1--18},
+  url     = {http://jmlr.org/papers/v23/21-1342.html}
+}
+```
