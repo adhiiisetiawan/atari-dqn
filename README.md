@@ -106,7 +106,7 @@ Here's a GIF of the agent playing `MS PacMan`:
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Acknowledgment
-This repository inspired by CleanRL by Costa Huang
+This repository inspired by CleanRL
 ```
 @article{huang2022cleanrl,
   author  = {Shengyi Huang and Rousslan Fernand Julien Dossa and Chang Ye and Jeff Braga and Dipam Chakraborty and Kinal Mehta and João G.M. Araújo},
