@@ -59,18 +59,14 @@ To train and evaluate the DQN agent, follow the steps outlined below:
 2. Train the DQN agent:
 
 ```bash
-python train.py --game <game_name>
+sh train.sh
 ```
 
-Replace `<game_name>` with the name of the Atari game you want to train the agent on (e.g., `Pong`, `Breakout`, etc.).
+If you want to change the game that you train, please edit the game environment name in `train.sh` file.
 
 3. Evaluate the trained agent:
 
-```bash
-python evaluate.py --game <game_name> --model <model_path>
-```
-
-Replace `<game_name>` with the name of the Atari game and `<model_path>` with the path to the trained model.
+Evaluation process has been done during end of training, but if you want to run evaluation separately, just run `dqn_eval.py` and change the game environment.
 
 ## Training
 
@@ -104,10 +100,6 @@ Here's a GIF of the agent playing `MS PacMan`:
 
 ![Agent Playing](assets/pacman.gif)
 
-
-## Contributing
-
-Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct, and the process for submitting pull requests to us.
 
 ## License
 
